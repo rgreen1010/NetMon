@@ -22,7 +22,10 @@ WhoisService::~WhoisService() {
 #endif
 }
 
-    WhoisInfo WhoisService::lookup(const std::string& ipAddress) {
+/*
+* ------------------ Whois Lookup ------------------------
+*/
+WhoisService::WhoisInfo WhoisService::lookup(const std::string& ipAddress) {
     WhoisInfo info;
     info.ip = ipAddress;
 
@@ -113,7 +116,7 @@ std::string WhoisService::sendWhoisQuery(const std::string& server, const std::s
     return response;
 }
 
-    WhoisInfo WhoisService::parseWhoisResponse(const std::string& response,
+WhoisService::WhoisInfo WhoisService::parseWhoisResponse(const std::string& response,
     const std::string& ipAddress) {
     WhoisInfo info;
     info.ip = ipAddress;
@@ -149,10 +152,10 @@ std::string WhoisService::sendWhoisQuery(const std::string& server, const std::s
 
             size_t colonPos = line.find(':');
             if (colonPos != std::string::npos && colonPos + 1 < line.length()) {
-                info.registrant.name = line.substr(colonPos + 1);
+                info.registrant = line.substr(colonPos + 1);
                 // Trim
-                info.registrant.name.erase(0, info.registrant.name.find_first_not_of(" \t"));
-                info.registrant.name.erase(info.registrant.name.find_last_not_of(" \t") + 1);
+                info.registrant.erase(0, info.registrant.find_first_not_of(" \t"));
+                info.registrant.erase(info.registrant.find_last_not_of(" \t") + 1);
             }
         }
         else if (lowerLine.find("organization") != std::string::npos ||
@@ -160,19 +163,19 @@ std::string WhoisService::sendWhoisQuery(const std::string& server, const std::s
 
             size_t colonPos = line.find(':');
             if (colonPos != std::string::npos && colonPos + 1 < line.length()) {
-                info.registrant.organization = line.substr(colonPos + 1);
+                info.organization = line.substr(colonPos + 1);
                 // Trim
-                info.registrant.organization.erase(0, info.registrant.organization.find_first_not_of(" \t"));
-                info.registrant.organization.erase(info.registrant.organization.find_last_not_of(" \t") + 1);
+                info.organization.erase(0, info.organization.find_first_not_of(" \t"));
+                info.organization.erase(info.organization.find_last_not_of(" \t") + 1);
             }
         }
         else if (lowerLine.find("country") != std::string::npos) {
             size_t colonPos = line.find(':');
             if (colonPos != std::string::npos && colonPos + 1 < line.length()) {
-                info.registrant.country = line.substr(colonPos + 1);
+                info.country = line.substr(colonPos + 1);
                 // Trim
-                info.registrant.country.erase(0, info.registrant.country.find_first_not_of(" \t"));
-                info.registrant.country.erase(info.registrant.country.find_last_not_of(" \t") + 1);
+                info.country.erase(0, info.country.find_first_not_of(" \t"));
+                info.country.erase(info.country.find_last_not_of(" \t") + 1);
             }
         }
         else if (lowerLine.find("abuse") != std::string::npos &&
@@ -180,10 +183,10 @@ std::string WhoisService::sendWhoisQuery(const std::string& server, const std::s
 
             size_t colonPos = line.find(':');
             if (colonPos != std::string::npos && colonPos + 1 < line.length()) {
-                info.registrant.contact = line.substr(colonPos + 1);
+                info.abuseContact = line.substr(colonPos + 1);
                 // Trim
-                    info.registrant.contact.erase(0, info.registrant.contact.find_first_not_of(" \t"));
-                info.registrant.contact.erase(info.registrant.contact.find_last_not_of(" \t") + 1);
+                info.abuseContact.erase(0, info.abuseContact.find_first_not_of(" \t"));
+                info.abuseContact.erase(info.abuseContact.find_last_not_of(" \t") + 1);
             }
         }
 
@@ -199,7 +202,7 @@ std::string WhoisService::sendWhoisQuery(const std::string& server, const std::s
                 referServer.erase(referServer.find_last_not_of(" \t") + 1);
 
                 // If we have a referral and little information, query the referred server
-                if (info.registrant.name.empty() && info.registrant.organization.empty() && !referServer.empty()) {
+                if (info.registrant.empty() && info.organization.empty() && !referServer.empty()) {
                     std::string newResponse = sendWhoisQuery(referServer, ipAddress);
                     if (!newResponse.empty()) {
                         return parseWhoisResponse(newResponse, ipAddress);
@@ -211,14 +214,6 @@ std::string WhoisService::sendWhoisQuery(const std::string& server, const std::s
 
     return info;
 }
-
-// **** NOTE ****
-// The InetPton() function returns a value of 0 if the pAddrBuf parameter points 
-// to a string that is not a valid IPv4 dotted-decimal string or a valid 
-// IPv6 address string. 
-// If no error occurs, the InetPton function returns a value of 1 and the 
-// buffer pointed to by the pAddrBuf parameter contains the binary numeric 
-// IP address in network byte order.
 
 bool WhoisService::isIPv4(const std::string& ipAddress) {
     struct sockaddr_in sa;

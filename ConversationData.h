@@ -2,13 +2,14 @@
 
 // Data structure for traffic information
 struct ConversationData {
+    int         id;         // needed for the database unused in the traffic map
     std::string sourceIp;
     std::string destIp;
-    int sourcePort;
-    int destPort;
+    int         sourcePort;
+    int         destPort;
     std::string protocol;
-    long packetCount;
-    long byteCount;
+    long        packetCount;
+    long        byteCount;
 };
 
 // Key for the map

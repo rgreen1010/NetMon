@@ -15,21 +15,23 @@ public:
     // Processing methods
     void processRawConversations();
     void updateHostnames(int maxItems = 100);
-    void updateWhoisInfo(int maxItems = 50);
+    void updateWhoisInfoEntries(int maxItems = 50, DatabaseManager& dbManager );
 
     // DNS and WHOIS lookup methods
     std::string performDnsLookup(const std::string& ip);
     std::string performLocalLookup(const std::string& ip);
-    DatabaseManager::WhoisInfo performWhoisLookup(const std::string& ip);
+    WhoisService::WhoisInfo performWhoisLookup(const std::string& ip);
 
 private:
     std::shared_ptr<DatabaseManager> dbManager;
-
     std::thread processorThread;
+
     std::atomic<bool> running;
     std::condition_variable cv;
     std::mutex cvMutex;
 
-    void processorThreadFunction();
+    void processNetworkDataThread(std::atomic<bool>& running,
+        std::condition_variable& cv, DatabaseManager& dbManager);
+
 };
 

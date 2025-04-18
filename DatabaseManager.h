@@ -32,17 +32,11 @@ public:
     bool isHostnameUpToDate(const std::string& ip, int maxAgeDays = 7);
     std::vector<std::string> getIpsNeedingHostnameLookup(int maxAgeDays = 7, int limit = 100);
     std::map<std::string, std::string> getAllHostnames();
-/*
-    // WHOIS methods
-    struct WhoisInfo {
-        std::string networkCidr;
-        std::string registrant;
-        std::string details;
-    };
- */
+
+
     // Whois database entries access methods use "new" WhoisService data structures
-    bool updateWhoisInfo(const std::string& ip, const WhoisInfo& info);
-    WhoisInfo getWhoisInfo(const std::string& ip);
+    bool updateWhoisInfo(const std::string& ip, const WhoisService::WhoisInfo& info);
+    WhoisService::WhoisInfo getWhoisInfo(const std::string& ip);
     bool isWhoisInfoUpToDate(const std::string& ip, int maxAgeDays = 30);
     std::vector<std::string> getIpsNeedingWhoisLookup(int maxAgeDays = 30, int limit = 50);
 

@@ -330,17 +330,19 @@ void NetMonApp::triggerHostnameUpdate() {
 }
 
 void NetMonApp::triggerWhoisUpdate() {
+
     statusLabel->setText("Updating WHOIS information...");
 
     // Create a separate thread for WHOIS updates
     std::thread whoisThread([this]() {
+        WhoisService whoisService;
         auto ips = dbManager.getIpsNeedingWhoisLookup();
 
         for (const auto& ip : ips) {
             statusLabel->setText(QString("Looking up WHOIS for %1...").arg(QString::fromStdString(ip)));
             QApplication::processEvents();
 
-            WhoisInfo info = performWhoisLookup(ip);
+            WhoisService::WhoisInfo info = whoisService.lookup(ip);
             if (!info.registrant.empty()) {
                 //dbManager.updateWhoisInfo(ip, info.networkCidr, info.registrant, info.details);
                 dbManager.updateWhoisInfo(ip, info);

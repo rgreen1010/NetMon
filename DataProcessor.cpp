@@ -15,7 +15,7 @@ bool DataProcessor::start() {
     }
 
     running = true;
-    processorThread = std::thread(&DataProcessor::processorThreadFunction, this);
+    processorThread = std::thread(&DataProcessor::processNetworkDataThread, this);
     return true;
 }
 
@@ -36,7 +36,12 @@ bool DataProcessor::isRunning() const {
     return running;
 }
 
-void DataProcessor::processorThreadFunction() {
+//void DataProcessor::processorThreadFunction() {
+void  DataProcessor::processNetworkDataThread(std::atomic<bool>& running,
+    std::condition_variable& cv,
+    DatabaseManager& dbManager) {
+    
+
     while (running) {
         // Wait for notification or periodic check
         {
@@ -53,7 +58,7 @@ void DataProcessor::processorThreadFunction() {
         updateHostnames();
 
         // Update a batch of WHOIS records
-        updateWhoisInfo();
+        updateWhoisInfoEntries(WHOIS_QUERY_LIMIT, dbManager);
     }
 }
 
@@ -140,11 +145,30 @@ std::string DataProcessor::performLocalLookup(const std::string& ip) {
     return "";
 }
 
-DatabaseManager::WhoisInfo DataProcessor::performWhoisLookup(const std::string& ip) {
+void DataProcessor::updateWhoisInfoEntries(int maxItems = 50, DatabaseManager& dbManager) {
+
+    WhoisService whoisService;
+    // Update WHOIS info
+    auto ipsForWhois = dbManager.getIpsNeedingWhoisLookup();
+    for (const auto& ip : ipsForWhois) {
+        WhoisService::WhoisInfo info = whoisService.lookup(ip);
+
+        if (!whoisService.hasError() && !info.registrant.empty()) {
+            dbManager.updateWhoisInfo( ip, info );
+        }
+        else if (whoisService.hasError()) {
+            std::cerr << "WHOIS lookup error for " << ip << ": "
+                << whoisService.getLastError() << std::endl;
+        }
+    }
+};
+
+
+WhoisService::WhoisInfo DataProcessor::performWhoisLookup(const std::string& ip) {
     // Placeholder for WHOIS lookup implementation
     // In a real application, connect to WHOIS servers or use a library
 
-    DatabaseManager::WhoisInfo info;
+    WhoisService::WhoisInfo info;
     // Sample info for demonstration
     info.networkCidr = ip.substr(0, ip.find_last_of('.')) + ".0/24";
     info.registrant = "Example Organization";
